@@ -27,7 +27,7 @@ public class App {
         logger.info("is done : " + allOf.isDone());
 //        allOf.join();
         //        logger.info("future get : " + future.getNow(0));
-        logger.info("is done : " );
+        logger.info("is done : ");
 
 
 //        Thread thread1 = new Thread(() -> {

@@ -11,7 +11,7 @@ public class CountDownLatchTest {
         conferenceThread.start();
 
         for (int i = 0; i < 10; i++) {
-            Participant p = new Participant(String.valueOf(i+1));
+            Participant p = new Participant(String.valueOf(i + 1));
             p.setConference(conference);
             new Thread(p).start();
         }
