@@ -1,12 +1,15 @@
-package org.spring;
+package org.concurrency;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.util.concurrent.Semaphore;
+import java.util.logging.Logger;
 
 public class SemaphoreTest {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static final Logger LOGGER = Logger.getLogger("CONCURRENCY");
+
+    public static void main(String[] args) {
         PrintQueue printQueue = new PrintQueue();
         ArrayList<Thread> runnables = new ArrayList<>(10);
         for (int i = 0; i < 10; i++) {
@@ -26,18 +29,19 @@ class PrintQueue {
     private final Semaphore semaphore;
 
     PrintQueue() {
-        this.semaphore = new Semaphore(1);
+        this.semaphore = new Semaphore(3);
     }
 
-    public void printJob(Object document) {
+    void printJob() {
         try {
             semaphore.acquire();
             Duration duration = Duration.ofSeconds(3);
-            System.out.printf("%s: PrintQueue: Printing a document during %d seconds\n",
-                    Thread.currentThread().getName(), duration.getSeconds());
+            SemaphoreTest.LOGGER.info(() -> Thread.currentThread().getName() +
+                    ": PrintQueue: Printing a document during " + duration.getSeconds() + " seconds.");
             Thread.sleep(duration.toMillis());
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            SemaphoreTest.LOGGER.severe("Interrupted!");
+            Thread.currentThread().interrupt();
         } finally {
             semaphore.release();
         }
@@ -47,14 +51,14 @@ class PrintQueue {
 class Job implements Runnable {
     private PrintQueue printQueue;
 
-    public Job(PrintQueue printQueue) {
+    Job(PrintQueue printQueue) {
         this.printQueue = printQueue;
     }
 
     @Override
     public void run() {
-        System.out.printf("%s: Going to print a document\n", Thread.currentThread().getName());
-        printQueue.printJob(new Object());
-        System.out.printf("%s: The document has been printed\n", Thread.currentThread().getName());
+        SemaphoreTest.LOGGER.info(() -> Thread.currentThread().getName() + ": Going to print a document.");
+        printQueue.printJob();
+        SemaphoreTest.LOGGER.info(() -> Thread.currentThread().getName() + ": The document has been printed");
     }
 }

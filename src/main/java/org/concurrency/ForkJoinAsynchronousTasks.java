@@ -1,4 +1,4 @@
-package org.spring;
+package org.concurrency;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public class ForkJoinAsynchronousTasks {
+    public static final Logger LOGGER = Logger.getLogger("CONCURRENCY");
 
     public static void main(String[] args) {
         ForkJoinPool pool = new ForkJoinPool();
@@ -31,15 +33,16 @@ public class ForkJoinAsynchronousTasks {
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.severe("Interrupted!");
+                Thread.currentThread().interrupt();
             }
         } while ((!bkService.isDone()) || (!gateway.isDone()));
 
         List<String> bkServiceJavaFiles = bkService.join();
         List<String> gatewayJavaFiles = gateway.join();
 
-        System.out.printf("Files with %s extension found in %s\t\t:%d\n", ext, bookServicePath, bkServiceJavaFiles.size());
-        System.out.printf("Files with %s extension found in %s\t\t:%d\n", ext, gatewayPath, gatewayJavaFiles.size());
+        LOGGER.info(() -> "Files with " + ext + " extension found in " + bookServicePath + "\t\t:" + bkServiceJavaFiles.size());
+        LOGGER.info(() -> "Files with " + ext + " extension found in " + gatewayPath + "\t\t:" + gatewayJavaFiles.size());
     }
 }
 
@@ -70,13 +73,14 @@ class FolderProcessor extends RecursiveTask<List<String>> {
                     subfolderTask.fork();
                     folderTasks.add(subfolderTask);
                 } else {
-                    if (checkFile(files[i].getName())){
+                    if (checkFile(files[i].getName())) {
                         listOfFiles.add(files[i].getAbsolutePath());
                     }
                 }
             }
             if (folderTasks.size() > 50) {
-                System.out.printf("%s : %d tasks ran.\n", folder.getAbsolutePath(), folderTasks.size());
+                ForkJoinAsynchronousTasks.LOGGER.info(() -> folder.getAbsolutePath() + " : " +
+                        folderTasks.size() + " tasks ran.");
             }
             addResultsFromTasks(listOfFiles, folderTasks);
         }
